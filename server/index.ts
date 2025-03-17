@@ -115,8 +115,8 @@ async function startServer() {
       });
     });
 
-  } catch (error) {
-    log('Failed to start server:', error);
+  } catch (error: unknown) {
+    log('Failed to start server:', error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
