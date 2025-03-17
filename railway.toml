@@ -1,6 +1,6 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npm install && npm run build"
+builder = "DOCKERFILE"
+dockerfilePath = "./Dockerfile"
 
 [deploy]
 startCommand = "node dist/index.js"
@@ -10,4 +10,9 @@ restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
 [deploy.env]
-NODE_ENV = "production" 
+NODE_ENV = "production"
+PORT = "5000"
+DATABASE_URL = "(Railway will provide this automatically)"
+SESSION_SECRET = "(generate a random string)"
+FRONTEND_URL = "https://event-master-yp6h.vercel.app"
+API_URL = "https://eventmaster-api.up.railway.app" 
