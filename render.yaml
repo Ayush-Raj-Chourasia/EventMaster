@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: eventmaster-api
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: eventmaster-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://eventmaster.vercel.app
+      - key: PORT
+        value: 5000
+      - key: API_URL
+        value: https://eventmaster-api.onrender.com
+
+databases:
+  - name: eventmaster-db
+    plan: free 
