@@ -78,7 +78,7 @@ async function startServer() {
       serveStatic(app);
     }
 
-    const port = process.env.PORT || 5000;
+    const port = Number(process.env.PORT) || 5000;
     const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 
     // SSL configuration for production

@@ -33,8 +33,8 @@ RUN mkdir -p logs
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=5000
-ENV DATABASE_URL=(Railway will provide this automatically)
-ENV SESSION_SECRET=(generate a random string)
+ENV DATABASE_URL=railway_provided
+ENV SESSION_SECRET=random_string
 ENV FRONTEND_URL=https://event-master-yp6h.vercel.app
 ENV API_URL=https://eventmaster-api.up.railway.app
 
