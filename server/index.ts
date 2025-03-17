@@ -7,10 +7,15 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
+let server: any = null;
 
 // Health check endpoint - must be before other middleware
 app.get('/api/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 // Basic middleware
@@ -51,52 +56,70 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  const server = await registerRoutes(app);
+// Error handling middleware
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
 
-  // Error handling middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+  res.status(status).json({ message });
+  throw err;
+});
 
-    res.status(status).json({ message });
-    throw err;
-  });
+// Start server function
+async function startServer() {
+  try {
+    // Register routes
+    await registerRoutes(app);
 
-  // Setup Vite in development or serve static files in production
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+    // Setup Vite in development or serve static files in production
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
 
-  const port = process.env.PORT || 5000;
-  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
+    const port = process.env.PORT || 5000;
+    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 
-  // SSL configuration for production
-  if (process.env.NODE_ENV === 'production' && process.env.SSL_KEY_PATH && process.env.SSL_CERT_PATH) {
-    const sslOptions = {
-      key: fs.readFileSync(process.env.SSL_KEY_PATH),
-      cert: fs.readFileSync(process.env.SSL_CERT_PATH),
-      minVersion: 'TLSv1.2' as const,
-      ciphers: [
-        'ECDHE-ECDSA-AES128-GCM-SHA256',
-        'ECDHE-RSA-AES128-GCM-SHA256',
-        'ECDHE-ECDSA-AES256-GCM-SHA384',
-        'ECDHE-RSA-AES256-GCM-SHA384'
-      ].join(':')
-    };
+    // SSL configuration for production
+    if (process.env.NODE_ENV === 'production' && process.env.SSL_KEY_PATH && process.env.SSL_CERT_PATH) {
+      const sslOptions = {
+        key: fs.readFileSync(process.env.SSL_KEY_PATH),
+        cert: fs.readFileSync(process.env.SSL_CERT_PATH),
+        minVersion: 'TLSv1.2' as const,
+        ciphers: [
+          'ECDHE-ECDSA-AES128-GCM-SHA256',
+          'ECDHE-RSA-AES128-GCM-SHA256',
+          'ECDHE-ECDSA-AES256-GCM-SHA384',
+          'ECDHE-RSA-AES256-GCM-SHA384'
+        ].join(':')
+      };
 
-    https.createServer(sslOptions, app).listen(443, host, () => {
-      log(`HTTPS server running on port 443`);
+      https.createServer(sslOptions, app).listen(443, host, () => {
+        log(`HTTPS server running on port 443`);
+      });
+    }
+
+    // Start HTTP server
+    server = app.listen(port, host, () => {
+      log(`Server running on port ${port}`);
+      log(`Health check available at http://${host}:${port}/api/health`);
     });
-  }
 
-  // HTTP server (redirect to HTTPS in production)
-  server.listen({
-    port,
-    host,
-  }, () => {
-    log(`HTTP server running on port ${port}`);
-  });
-})();
+    // Handle graceful shutdown
+    process.on('SIGTERM', () => {
+      log('SIGTERM received. Shutting down gracefully...');
+      server.close(() => {
+        log('Server closed');
+        process.exit(0);
+      });
+    });
+
+  } catch (error) {
+    log('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();

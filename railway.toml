@@ -8,6 +8,7 @@ healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+healthcheckInterval = 30
 
 [deploy.env]
 NODE_ENV = "production"
