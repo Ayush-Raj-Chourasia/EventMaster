@@ -12,7 +12,7 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application with path aliases
 RUN npm run build
 
 # Production stage
@@ -26,6 +26,7 @@ RUN npm ci --only=production
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src ./src
 
 # Create logs directory
 RUN mkdir -p logs
@@ -35,7 +36,7 @@ ENV NODE_ENV=production
 ENV PORT=5000
 ENV DATABASE_URL=railway_provided
 ENV SESSION_SECRET=random_string
-ENV FRONTEND_URL=https://event-master-yp6h.vercel.app
+ENV FRONTEND_URL=https://event-master-gbjr.vercel.app
 ENV API_URL=https://eventmaster-api.up.railway.app
 
 # Expose the port the app runs on
