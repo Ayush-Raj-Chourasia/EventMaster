@@ -7,6 +7,13 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
+
+// Health check endpoint - must be before other middleware
+app.get('/api/health', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -42,11 +49,6 @@ app.use((req, res, next) => {
   });
 
   next();
-});
-
-// Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok' });
 });
 
 (async () => {
